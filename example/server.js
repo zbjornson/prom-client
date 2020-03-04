@@ -16,7 +16,11 @@ const Counter = require('../').Counter;
 const c = new Counter({
 	name: 'test_counter',
 	help: 'Example of a counter',
-	labelNames: ['code']
+	labelNames: ['code'],
+	collect() {
+		// collect is invoked each time `register.metrics()` is called.
+		this.inc({ code: 200 });
+	}
 });
 
 const Gauge = require('../').Gauge;
@@ -30,10 +34,6 @@ setTimeout(() => {
 	h.labels('200').observe(Math.random());
 	h.labels('300').observe(Math.random());
 }, 10);
-
-setInterval(() => {
-	c.inc({ code: 200 });
-}, 5000);
 
 setInterval(() => {
 	c.inc({ code: 400 });
@@ -69,19 +69,18 @@ setInterval(() => {
 	}
 });
 
-server.get('/metrics', (req, res) => {
+server.get('/metrics', async (req, res) => {
 	res.set('Content-Type', register.contentType);
-	res.end(register.metrics());
+	res.end(await register.metrics());
 });
 
-server.get('/metrics/counter', (req, res) => {
+server.get('/metrics/counter', async (req, res) => {
 	res.set('Content-Type', register.contentType);
-	res.end(register.getSingleMetricAsString('test_counter'));
+	res.end(await register.getSingleMetricAsString('test_counter'));
 });
 
 // Enable collection of default metrics
 require('../').collectDefaultMetrics({
-	timeout: 10000,
 	gcDurationBuckets: [0.001, 0.01, 0.1, 1, 2, 5] // These are the default buckets.
 });
 

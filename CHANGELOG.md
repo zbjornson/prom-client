@@ -9,6 +9,29 @@ project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Breaking
 
+- changed: The following functions are now async (return a promise):
+  `registry.metrics()`
+  `registry.getMetricsAsJSON()`
+  `registry.getMetricsAsArray()`
+  `registry.getSingleMetricAsString()`
+  `registry.getSingleMetric()`
+
+  If your metrics server looks like `res.send(register.metrics())`, you should
+  change it to `res.send(await register.metrics())`.
+
+  Additionally, all metric types now accept an optional `collect` function,
+  which is called when the metric's value should be collected and within which
+  you should set the metric's value. You should provide a `collect` function for
+  point-in-time metrics (e.g. current memory usage, as opposed to HTTP request
+  durations that are continuously logged in a histogram).
+
+- changed: `register.clusterMetrics()` no longer accepts a callback; it only
+  returns a promise.
+
+- removed: v12.0.0 added the undocumented functions `registry.registerCollector`
+  and `registry.collectors()`. These have been removed. If you were using them,
+  you should instead provide a `collect` function as described above.
+
 ### Changed
 
 - fix: provide nodejs_version_info metrics after calling `registry.resetMetrics()` (#238)
@@ -16,8 +39,6 @@ project adheres to [Semantic Versioning](http://semver.org/).
 - chore: refactor metrics to reduce code duplication
 
 ### Added
-
-- feat: exposed `registry.registerCollector()` and `registry.collectors()` methods in TypeScript declaration
 
 ## [12.0.0] - 2020-02-20
 
