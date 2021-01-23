@@ -136,7 +136,7 @@ Counters go up, and reset when the process restarts.
 const client = require('prom-client');
 const counter = new client.Counter({
   name: 'metric_name',
-  help: 'metric_help'
+  help: 'metric_help',
 });
 counter.inc(); // Inc with 1
 counter.inc(10); // Inc with 10
@@ -162,7 +162,7 @@ There are some utilities for common use cases:
 gauge.setToCurrentTime(); // Sets value to current time
 
 const end = gauge.startTimer();
-xhrRequest(function(err, res) {
+xhrRequest(function (err, res) {
   end(); // Sets value to xhrRequests duration in seconds
 });
 ```
@@ -181,7 +181,7 @@ const client = require('prom-client');
 new client.Histogram({
   name: 'metric_name',
   help: 'metric_help',
-  buckets: [0.1, 5, 15, 50, 100, 500]
+  buckets: [0.1, 5, 15, 50, 100, 500],
 });
 ```
 
@@ -193,7 +193,7 @@ new client.Histogram({
   name: 'metric_name',
   help: 'metric_help',
   labelNames: ['status_code'],
-  buckets: [0.1, 5, 15, 50, 100, 500]
+  buckets: [0.1, 5, 15, 50, 100, 500],
 });
 ```
 
@@ -203,7 +203,7 @@ Examples
 const client = require('prom-client');
 const histogram = new client.Histogram({
   name: 'metric_name',
-  help: 'metric_help'
+  help: 'metric_help',
 });
 histogram.observe(10); // Observe value in histogram
 ```
@@ -212,7 +212,7 @@ Utility to observe request durations
 
 ```js
 const end = histogram.startTimer();
-xhrRequest(function(err, res) {
+xhrRequest(function (err, res) {
   const seconds = end(); // Observes and returns the value to xhrRequests duration in seconds
 });
 ```
@@ -231,7 +231,7 @@ const client = require('prom-client');
 new client.Summary({
   name: 'metric_name',
   help: 'metric_help',
-  percentiles: [0.01, 0.1, 0.9, 0.99]
+  percentiles: [0.01, 0.1, 0.9, 0.99],
 });
 ```
 
@@ -244,7 +244,7 @@ new client.Summary({
   name: 'metric_name',
   help: 'metric_help',
   maxAgeSeconds: 600,
-  ageBuckets: 5
+  ageBuckets: 5,
 });
 ```
 
@@ -258,7 +258,7 @@ Usage example
 const client = require('prom-client');
 const summary = new client.Summary({
   name: 'metric_name',
-  help: 'metric_help'
+  help: 'metric_help',
 });
 summary.observe(10);
 ```
@@ -267,7 +267,7 @@ Utility to observe request durations
 
 ```js
 const end = summary.startTimer();
-xhrRequest(function(err, res) {
+xhrRequest(function (err, res) {
   end(); // Observes the value to xhrRequests duration in seconds
 });
 ```
@@ -283,7 +283,7 @@ const client = require('prom-client');
 const gauge = new client.Gauge({
   name: 'metric_name',
   help: 'metric_help',
-  labelNames: ['method', 'statusCode']
+  labelNames: ['method', 'statusCode'],
 });
 
 gauge.set({ method: 'GET', statusCode: '200' }, 100); // 1st version, Set value 100 with method set to GET and statusCode to 200
@@ -295,7 +295,7 @@ is created:
 
 ```js
 const end = startTimer({ method: 'GET' }); // Set method to GET, we don't know statusCode yet
-xhrRequest(function(err, res) {
+xhrRequest(function (err, res) {
   if (err) {
     end({ statusCode: '500' }); // Sets value to xhrRequest duration in seconds with statusCode 500
   } else {
@@ -347,12 +347,12 @@ const registry = new client.Registry();
 const counter = new client.Counter({
   name: 'metric_name',
   help: 'metric_help',
-  registers: [registry]
+  registers: [registry],
 });
 const histogram = new client.Histogram({
   name: 'metric_name',
   help: 'metric_help',
-  registers: []
+  registers: [],
 });
 registry.registerMetric(histogram);
 counter.inc();
@@ -407,10 +407,10 @@ consume.
 ```js
 register
   .clusterMetrics()
-  .then(metrics => {
+  .then((metrics) => {
     /* ... */
   })
-  .catch(err => {
+  .catch((err) => {
     /* ... */
   });
 
@@ -430,19 +430,28 @@ It is possible to push metrics via a
 const client = require('prom-client');
 let gateway = new client.Pushgateway('http://127.0.0.1:9091');
 
-gateway.pushAdd({ jobName: 'test' }, function(err, resp, body) {}); //Add metric and overwrite old ones
-gateway.push({ jobName: 'test' }, function(err, resp, body) {}); //Overwrite all metrics (use PUT)
-gateway.delete({ jobName: 'test' }, function(err, resp, body) {}); //Delete all metrics for jobName
+gateway.pushAdd({ jobName: 'test' }, function (err, resp, body) {}); //Add metric and overwrite old ones
+gateway.push({ jobName: 'test' }, function (err, resp, body) {}); //Overwrite all metrics (use PUT)
+gateway.delete({ jobName: 'test' }, function (err, resp, body) {}); //Delete all metrics for jobName
 
 //All gateway requests can have groupings on it
-gateway.pushAdd({ jobName: 'test', groupings: { key: 'value' } }, function(
+gateway.pushAdd({ jobName: 'test', groupings: { key: 'value' } }, function (
   err,
   resp,
   body
 ) {});
 
-//It's possible to extend the Pushgateway with request options from nodes core http/https library
-gateway = new client.Pushgateway('http://127.0.0.1:9091', { timeout: 5000 }); //Set the request timeout to 5000ms
+// It's possible to extend the Pushgateway with request options from nodes core
+// http/https library. In particular, you might want to provide an agent so that
+// TCP connections are reused.
+gateway = new client.Pushgateway('http://127.0.0.1:9091', {
+  timeout: 5000, //Set the request timeout to 5000ms
+  agent: new http.Agent({
+    keepAlive: true,
+    keepAliveMsec: 10000,
+    maxSockets: 5,
+  }),
+});
 ```
 
 ### Utilities
@@ -455,13 +464,13 @@ const client = require('prom-client');
 new client.Histogram({
   name: 'metric_name',
   help: 'metric_help',
-  buckets: client.linearBuckets(0, 10, 20) //Create 20 buckets, starting on 0 and a width of 10
+  buckets: client.linearBuckets(0, 10, 20), //Create 20 buckets, starting on 0 and a width of 10
 });
 
 new client.Histogram({
   name: 'metric_name',
   help: 'metric_help',
-  buckets: client.exponentialBuckets(1, 2, 5) //Create 5 buckets, starting on 1 and with a factor of 2
+  buckets: client.exponentialBuckets(1, 2, 5), //Create 5 buckets, starting on 1 and with a factor of 2
 });
 ```
 
